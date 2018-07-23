@@ -69,3 +69,11 @@ module OmniAuth
     end
   end
 end
+
+auth_provider title: 'Sign in with ActiveTextbook',
+  message: 'Log in with your ActiveTextbook account.'
+  frame_width: 920,
+  frame_height: 800,
+  authenticator: AtbAuthenticator.new('atb',
+    trusted: true,
+    auto_create_account: true)
