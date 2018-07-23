@@ -1,0 +1,6 @@
+login:
+  atb_oauth_enabled:
+    default: false
+    client: true
+  atb_oauth_id: ''
+  atb_oauth_secret: ''
