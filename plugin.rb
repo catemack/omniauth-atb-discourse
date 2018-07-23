@@ -37,43 +37,40 @@ class AtbAuthenticator < ::Auth::Authenticator
   end
 
   def register_middleware(omniauth)
-    omniauth.provider :atb,
-      SiteSetting.login.atb_oauth_id,
-      SiteSetting.login.atb_oauth_secret
+    omniauth.provider :active_textbook,
+      name: 'atb',
+      setup: lambda { |env|
+        opts[:client_id] = SiteSetting.login.atb_oauth_id
+        opts[:client_secret] = SiteSetting.login.atb_oauth_secret
+        opts[:client_options] = {
+          site: SiteSetting.login.atb_site,
+          authorize_path: '/oauth/authorize',
+          token_path: '/oauth/token'
+        }
+      }
   end
 end
 
-module OmniAuth
-  module Strategies
-    class ActiveTextbook < OmniAuth::Strategies::OAuth2
-      option :name, :atb
-      option :client_options, {
-        site: SiteSetting.login.atb_site,
-        authorize_path: '/oauth/authorize',
-        token_path: '/oauth/token'                        
-      }
+class OmniAuth::Strategies::ActiveTextbook < OmniAuth::Strategies::OAuth2
+  option :name, :atb
 
-      uid { raw_info['id'] }
+  uid { raw_info['id'] }
 
-      info do
-        {
-          email: raw_info['email'],
-          name: raw_info['first_name'],
-          is_student: raw_info['is_student']
-        }
-      end
+  info do
+    {
+      email: raw_info['email'],
+      name: raw_info['first_name'],
+      is_student: raw_info['is_student']
+    }
+  end
 
-      def raw_info
-        @raw_info ||= access_token.get('/me').parsed
-      end
-    end
+  def raw_info
+    @raw_info ||= access_token.get('/me').parsed
   end
 end
 
 auth_provider title: 'Sign in with ActiveTextbook',
-  message: 'Log in with your ActiveTextbook account.'
+  message: 'Log in with your ActiveTextbook account.',
   frame_width: 920,
   frame_height: 800,
-  authenticator: AtbAuthenticator.new('atb',
-    trusted: true,
-    auto_create_account: true)
+  authenticator: AtbAuthenticator.new
