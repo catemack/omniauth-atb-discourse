@@ -5,14 +5,52 @@
 
 require 'omniauth-oauth2'
 
+class AtbAuthenticator < ::Auth::Authenticator
+  def name
+    'atb'
+  end
+
+  def after_authenticate(auth_token)
+    result = Auth::Result.new
+
+    data = auth_token[:info]
+    result.name = name = data[:name]
+    result.email = email = data[:email]
+    atb_uid = auth_token[:id]
+
+    current_info = ::PluginStore.get('atb', "atb_uid_#{atb_uid}")
+
+    result.user = User.find(current_info[:user_id]) if current_info.present?
+
+    result.extra_data = {
+      id: atb_uid,
+      is_student: data[:is_student]
+    }
+
+    result
+  end
+
+  def after_create_account(user, auth)
+    data = auth[:extra_data]
+    user.grant_admin! if data[:is_student].present? && !data[:is_student]
+    ::PluginStore.set('atb', "atb_uid_#{data[:id]}", {user_id: user.id})
+  end
+
+  def register_middleware(omniauth)
+    omniauth.provider :atb,
+      SiteSetting.login.atb_oauth_id,
+      SiteSetting.login.atb_oauth_secret
+  end
+end
+
 module OmniAuth
   module Strategies
     class ActiveTextbook < OmniAuth::Strategies::OAuth2
       option :name, :atb
       option :client_options, {
-        site: '',
-        authorize_url: '/oauth/authorize',
-        token_url: '/oauth/token'                        
+        site: SiteSetting.login.atb_site,
+        authorize_path: '/oauth/authorize',
+        token_path: '/oauth/token'                        
       }
 
       uid { raw_info['id'] }
@@ -20,9 +58,8 @@ module OmniAuth
       info do
         {
           email: raw_info['email'],
-          first_name: raw_info['first_name'],
-          last_name: raw_info['last_name'],
-          student: raw_info['student']
+          name: raw_info['first_name'],
+          is_student: raw_info['is_student']
         }
       end
 
