@@ -40,9 +40,10 @@ class AtbAuthenticator < ::Auth::Authenticator
     omniauth.provider :active_textbook,
       name: 'atb',
       setup: lambda { |env|
-        opts[:client_id] = SiteSetting.login.atb_oauth_id
-        opts[:client_secret] = SiteSetting.login.atb_oauth_secret
-        opts[:client_options] = {
+        strategy = env["omniauth.strategy"]
+        strategy.options[:client_id] = SiteSetting.login.atb_oauth_id
+        strategy.options[:client_secret] = SiteSetting.login.atb_oauth_secret
+        strategy.options[:client_options] = {
           site: SiteSetting.login.atb_site,
           authorize_path: '/oauth/authorize',
           token_path: '/oauth/token'
