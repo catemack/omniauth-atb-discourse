@@ -1,0 +1,6 @@
+en:
+  site_settings:
+    atb_oauth_enabled: "Enables sign in via ActiveTextbook OAuth."
+    atb_oauth_id: "The value of 'Application' from /oauth/applications on ATB."
+    atb_oauth_secret: "The value of 'Secret' from /oauth/applications on ATB."
+    atb_site: "The root url of the ATB instance."
