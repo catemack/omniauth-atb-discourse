@@ -1,4 +1,4 @@
-login:
+plugins:
   atb_oauth_enabled:
     default: false
     client: true

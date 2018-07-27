@@ -3,11 +3,17 @@
 # version: 0.0.1
 # authors: Catherine Mackenzie
 
+enabled_site_setting :atb_oauth_enabled
+
 require 'omniauth-oauth2'
 
 class AtbAuthenticator < ::Auth::Authenticator
   def name
     'atb'
+  end
+
+  def enabled?
+    SiteSetting.atb_oauth_enabled
   end
 
   def after_authenticate(auth_token)
@@ -16,11 +22,20 @@ class AtbAuthenticator < ::Auth::Authenticator
     data = auth_token[:info]
     result.name = name = data[:name]
     result.email = email = data[:email]
+    result.email_valid = result.email.present?
     atb_uid = auth_token[:id]
 
     current_info = ::PluginStore.get('atb', "atb_uid_#{atb_uid}")
 
-    result.user = User.find(current_info[:user_id]) if current_info.present?
+    if current_info.present?
+      result.user = User.find(current_info[:user_id])
+    else
+      result.user = User.find_by_email(result.email)
+      
+      if result.user.present? && atb_uid.present?
+        ::PluginStore.set('atb', "atb_uid_#{data[:id]}", {user_id: user.id})
+      end
+    end
 
     result.extra_data = {
       id: atb_uid,
@@ -41,12 +56,12 @@ class AtbAuthenticator < ::Auth::Authenticator
       name: 'atb',
       setup: lambda { |env|
         strategy = env["omniauth.strategy"]
-        strategy.options[:client_id] = SiteSetting.login.atb_oauth_id
-        strategy.options[:client_secret] = SiteSetting.login.atb_oauth_secret
+        strategy.options[:client_id] = SiteSetting.atb_oauth_id
+        strategy.options[:client_secret] = SiteSetting.atb_oauth_secret
         strategy.options[:client_options] = {
-          site: SiteSetting.login.atb_site,
-          authorize_path: '/oauth/authorize',
-          token_path: '/oauth/token'
+          site: SiteSetting.atb_site,
+          authorize_url: "#{SiteSetting.atb_site}/oauth/authorize",
+          token_url: "#{SiteSetting.atb_site}/oauth/token"
         }
       }
   end
