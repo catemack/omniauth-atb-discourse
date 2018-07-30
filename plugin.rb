@@ -28,8 +28,10 @@ class AtbAuthenticator < ::Auth::Authenticator
     current_info = ::PluginStore.get('atb', "atb_uid_#{atb_uid}")
 
     if current_info.present?
-      result.user = User.find(current_info[:user_id])
-    else
+      result.user = User.find_by_id(current_info[:user_id])
+    end
+
+    unless result.user.present?
       result.user = User.find_by_email(result.email)
       
       if result.user.present? && atb_uid.present?
@@ -47,7 +49,7 @@ class AtbAuthenticator < ::Auth::Authenticator
 
   def after_create_account(user, auth)
     data = auth[:extra_data]
-    user.grant_admin! if data[:is_student].present? && !data[:is_student]
+    user.grant_admin! unless data[:is_student].nil? || data[:is_student]
     ::PluginStore.set('atb', "atb_uid_#{data[:id]}", {user_id: user.id})
   end
 
@@ -85,8 +87,10 @@ class OmniAuth::Strategies::ActiveTextbook < OmniAuth::Strategies::OAuth2
   end
 end
 
-auth_provider title: 'Sign in with ActiveTextbook',
-  message: 'Log in with your ActiveTextbook account.',
+# auth_provider title: 'Sign in with ActiveTextbook',
+  # message: 'Log in with your ActiveTextbook account.',
+auth_provider title: 'Войти через ActiveTextbook',
+  message: 'Войти под вашей учетной записью в ActiveTextbook',
   frame_width: 920,
   frame_height: 800,
   authenticator: AtbAuthenticator.new

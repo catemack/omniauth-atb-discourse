@@ -1,0 +1,6 @@
+ru:
+  site_settings:
+    atb_oauth_enabled: "Разрешает вход через ActiveTextbook OAuth."
+    atb_oauth_id: "Значение атрибута 'ID приложения' из /oauth/ applications в ATB."
+    atb_oauth_secret: "Значение атрибута 'Секретный ключ' из /oauth/applications в ATB."
+    atb_site: "Корневой url сервера ATB."
