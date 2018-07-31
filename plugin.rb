@@ -23,9 +23,9 @@ class AtbAuthenticator < ::Auth::Authenticator
     result.name = name = data[:name]
     result.email = email = data[:email]
     result.email_valid = result.email.present?
-    atb_uid = auth_token[:id]
+    atb_uid = auth_token[:uid]
 
-    current_info = ::PluginStore.get('atb', "atb_uid_#{atb_uid}")
+    current_info = atb_uid.present? ? ::PluginStore.get('atb', "atb_uid_#{atb_uid}") : nil
 
     if current_info.present?
       result.user = User.find_by_id(current_info[:user_id])
@@ -91,6 +91,14 @@ end
   # message: 'Log in with your ActiveTextbook account.',
 auth_provider title: 'Войти через ActiveTextbook',
   message: 'Войти под вашей учетной записью в ActiveTextbook',
-  frame_width: 920,
-  frame_height: 800,
+  frame_width: 720,
+  frame_height: 600,
   authenticator: AtbAuthenticator.new
+
+register_css <<CSS
+
+.btn-social.atb {
+  color: #222;  
+}
+
+CSS
