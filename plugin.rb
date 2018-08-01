@@ -41,7 +41,9 @@ class AtbAuthenticator < ::Auth::Authenticator
 
     result.extra_data = {
       id: atb_uid,
-      is_student: data[:is_student]
+      admin: data[:is_admin],
+      course_manager: data[:is_course_manager],
+      teacher: data[:is_teacher]
     }
 
     result
@@ -49,7 +51,13 @@ class AtbAuthenticator < ::Auth::Authenticator
 
   def after_create_account(user, auth)
     data = auth[:extra_data]
-    user.grant_admin! unless data[:is_student].nil? || data[:is_student]
+
+    if data[:admin] || data[:course_manager]
+      user.grant_admin!
+    elsif data[:teacher]
+      user.grant_moderation!
+    end
+
     ::PluginStore.set('atb', "atb_uid_#{data[:id]}", {user_id: user.id})
   end
 
