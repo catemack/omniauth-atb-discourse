@@ -85,8 +85,10 @@ class OmniAuth::Strategies::ActiveTextbook < OmniAuth::Strategies::OAuth2
   info do
     {
       email: raw_info['email'],
-      name: raw_info['first_name'],
-      is_student: raw_info['is_student']
+      name: raw_info['name'],
+      is_admin: raw_info['is_admin'],
+      is_course_manager: raw_info['is_course_manager'],
+      is_teacher: raw_info['is_teacher']
     }
   end
 
